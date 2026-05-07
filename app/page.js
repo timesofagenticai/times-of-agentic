@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, Play, Star, Code2, RefreshCw, Cloud, Server, ExternalLink } from 'lucide-react';
+import { TrendingUp, TrendingDown, Play, Star, Code2, RefreshCw, Cloud, Server, ExternalLink, Flame } from 'lucide-react';
 
 function openUrl(url) {
   if (typeof window !== 'undefined') {
@@ -239,6 +239,7 @@ export default function TimesOfAgentic() {
   const [brief, setBrief] = useState(null);
   const [dell, setDell] = useState([]);
   const [multicloud, setMulticloud] = useState(null);
+  const [viral, setViral] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshedAt, setRefreshedAt] = useState(null);
 
@@ -256,6 +257,7 @@ export default function TimesOfAgentic() {
       fetch('/api/brief').then(function(r) { return r.json(); }).catch(function() { return null; }),
       fetch('/api/dell').then(function(r) { return r.json(); }).catch(function() { return { items: [] }; }),
       fetch('/api/multicloud').then(function(r) { return r.json(); }).catch(function() { return null; }),
+      fetch('/api/viral').then(function(r) { return r.json(); }).catch(function() { return { repos: [] }; }),
     ]).then(function(results) {
       setNews(results[0]);
       setVideos((results[1] && results[1].videos) || []);
@@ -264,6 +266,7 @@ export default function TimesOfAgentic() {
       setBrief(results[4]);
       setDell((results[5] && results[5].items) || []);
       setMulticloud(results[6]);
+      setViral((results[7] && results[7].repos) || []);
       setRefreshedAt(new Date());
       setLoading(false);
     });
@@ -288,7 +291,7 @@ export default function TimesOfAgentic() {
           />
         )}
         {!loading && route === 'reel' && <Reel videos={videos} />}
-        {!loading && route === 'trends' && <Trends trends={news && news.trends} />}
+        {!loading && route === 'trends' && <Trends trends={news && news.trends} viral={viral} />}
         {!loading && route === 'model' && <ModelOfWeek model={news && news.model_of_week} />}
       </div>
       <Footer />
@@ -757,7 +760,7 @@ function Reel(props) {
 
 function Trends(props) {
   const trends = props.trends;
-  if (!trends) return <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>Trend data not available.</div>;
+  const viral = props.viral || [];
 
   return (
     <div style={{ paddingTop: 32 }}>
@@ -766,44 +769,103 @@ function Trends(props) {
         <p style={{ fontSize: 14, fontStyle: 'italic', color: '#666', margin: 0 }}>What the wire is telling us this cycle</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 32 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, paddingBottom: 8, borderBottom: '1px solid #999' }}>
-            <TrendingUp size={18} color="#c0392b" />
-            <h3 style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>Heating Up</h3>
+      {viral.length > 0 && (
+        <div style={{ marginBottom: 40, paddingBottom: 32, borderBottom: '1px solid #999' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, paddingBottom: 8, borderBottom: '1px solid #c0392b', flexWrap: 'wrap' }}>
+            <Flame size={20} color="#c0392b" />
+            <h3 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Viral Now</h3>
+            <span style={{ fontSize: 12, fontStyle: 'italic', color: '#666', marginLeft: 'auto' }}>AI repos exploding in the last 7 days</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {(trends.heating || []).map(function(t, i) {
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 12 }}>
+            {viral.map(function(r, i) {
+              const intensityColor = r.intensity === 'blazing' ? '#c0392b' : (r.intensity === 'hot' ? '#e67e22' : (r.intensity === 'rising' ? '#f39c12' : '#888'));
+              const intensityLabel = r.intensity === 'blazing' ? 'BLAZING' : (r.intensity === 'hot' ? 'HOT' : (r.intensity === 'rising' ? 'RISING' : 'WARM'));
               return (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, background: '#ebe5d4', borderLeft: '3px solid #c0392b' }}>
-                  <div>
-                    <div style={{ fontSize: 16, fontWeight: 500 }}>{t.name}</div>
-                    <div style={{ fontSize: 12, fontStyle: 'italic', color: '#666' }}>volume: {t.volume}</div>
+                <button
+                  key={r.name}
+                  onClick={function() { openUrl(r.url); }}
+                  style={{
+                    background: '#fff',
+                    padding: '14px 16px',
+                    border: '0.5px solid #ccc',
+                    borderLeft: '3px solid ' + intensityColor,
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontFamily: 'Georgia, serif',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6, gap: 8 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: '#1a1a1a' }}>
+                      <span style={{ color: '#888' }}>#{i + 1}</span> {r.name}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#c0392b', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                      <Star size={12} fill="#c0392b" /> {r.stars_display}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 500, color: '#c0392b' }}>{t.delta}</div>
-                </div>
+                  <p style={{ fontSize: 12, color: '#555', lineHeight: 1.4, margin: '0 0 8px' }}>
+                    {r.description || 'No description.'}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 10, flexWrap: 'wrap', gap: 4 }}>
+                    <span style={{ color: '#888' }}>
+                      <Code2 size={10} style={{ display: 'inline', marginRight: 4, verticalAlign: -1 }} />
+                      {r.language}
+                    </span>
+                    <span style={{ color: intensityColor, fontWeight: 600, letterSpacing: 1 }}>
+                      {'\u25CF '}{intensityLabel} - pushed {r.hours_since_push}h ago
+                    </span>
+                  </div>
+                </button>
               );
             })}
           </div>
         </div>
+      )}
 
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, paddingBottom: 8, borderBottom: '1px solid #999' }}>
-            <TrendingDown size={18} color="#666" />
-            <h3 style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>Cooling Off</h3>
+      {trends && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 32 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, paddingBottom: 8, borderBottom: '1px solid #999' }}>
+              <TrendingUp size={18} color="#c0392b" />
+              <h3 style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>Heating Up</h3>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {(trends.heating || []).map(function(t, i) {
+                return (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, background: '#ebe5d4', borderLeft: '3px solid #c0392b' }}>
+                    <div>
+                      <div style={{ fontSize: 16, fontWeight: 500 }}>{t.name}</div>
+                      <div style={{ fontSize: 12, fontStyle: 'italic', color: '#666' }}>volume: {t.volume}</div>
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 500, color: '#c0392b' }}>{t.delta}</div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {(trends.cooling || []).map(function(t, i) {
-              return (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, background: '#f0ece1' }}>
-                  <div style={{ fontSize: 16, fontWeight: 500, color: '#555' }}>{t.name}</div>
-                  <div style={{ fontSize: 18, fontWeight: 500, color: '#888' }}>{t.delta}</div>
-                </div>
-              );
-            })}
+
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, paddingBottom: 8, borderBottom: '1px solid #999' }}>
+              <TrendingDown size={18} color="#666" />
+              <h3 style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>Cooling Off</h3>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {(trends.cooling || []).map(function(t, i) {
+                return (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, background: '#f0ece1' }}>
+                    <div style={{ fontSize: 16, fontWeight: 500, color: '#555' }}>{t.name}</div>
+                    <div style={{ fontSize: 18, fontWeight: 500, color: '#888' }}>{t.delta}</div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {!trends && viral.length === 0 && (
+        <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>Trend data not available.</div>
+      )}
     </div>
   );
 }
