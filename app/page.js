@@ -1,13 +1,234 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, Play, Star, Code2, RefreshCw, Cloud, Server } from 'lucide-react';
+import { TrendingUp, TrendingDown, Play, Star, Code2, RefreshCw, Cloud, Server, ExternalLink } from 'lucide-react';
 
 function openUrl(url) {
   if (typeof window !== 'undefined') {
     window.open(url, '_blank', 'noopener,noreferrer');
   }
 }
+
+const STYLES = `
+  body, html { margin: 0; padding: 0; }
+  
+  .toa-page {
+    min-height: 100vh;
+    background: #f5f1e8;
+    font-family: Georgia, "Times New Roman", serif;
+    color: #1a1a1a;
+  }
+  
+  .toa-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+  
+  .toa-masthead-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 24px 0;
+  }
+  
+  .toa-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    color: #666;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .toa-title {
+    text-align: center;
+    font-size: 56px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    margin: 4px 0;
+  }
+  
+  .toa-tagline {
+    text-align: center;
+    font-size: 11px;
+    font-style: italic;
+    color: #555;
+    letter-spacing: 0.2em;
+    margin: 0 0 6px;
+  }
+  
+  .toa-editor {
+    text-align: center;
+    font-size: 10px;
+    color: #777;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin: 0 0 16px;
+  }
+  
+  .toa-nav {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    padding: 12px 0;
+    border-top: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
+    flex-wrap: wrap;
+  }
+  
+  .toa-nav button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding-bottom: 4px;
+  }
+  
+  .toa-front-grid {
+    padding-top: 32px;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
+    align-items: start;
+  }
+  
+  .toa-aside-sticky {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+  }
+  
+  .toa-lead-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #999;
+  }
+  
+  .toa-lead-aside {
+    border-left: 1px solid #999;
+    padding-left: 16px;
+  }
+  
+  .toa-wire-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  
+  .toa-labs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+  }
+  
+  .toa-repos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 10px;
+  }
+  
+  .toa-reel-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 20px;
+  }
+  
+  .toa-headline {
+    font-size: 28px;
+    line-height: 1.2;
+    margin: 0 0 8px;
+    font-weight: 500;
+  }
+  
+  .toa-deck {
+    font-size: 16px;
+    font-style: italic;
+    color: #555;
+    margin: 0 0 12px;
+  }
+  
+  .toa-body {
+    font-size: 15px;
+    line-height: 1.6;
+    text-align: justify;
+    margin: 0 0 12px;
+  }
+  
+  /* Tablets */
+  @media (max-width: 1024px) {
+    .toa-front-grid {
+      grid-template-columns: 1fr;
+    }
+    .toa-aside-sticky {
+      position: static;
+    }
+  }
+  
+  /* Phones */
+  @media (max-width: 720px) {
+    .toa-container {
+      padding: 0 16px 60px;
+    }
+    .toa-masthead-inner {
+      padding: 16px 16px 0;
+    }
+    .toa-title {
+      font-size: 36px;
+    }
+    .toa-tagline {
+      letter-spacing: 0.1em;
+    }
+    .toa-nav {
+      gap: 16px;
+      padding: 10px 0;
+    }
+    .toa-nav button {
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+    .toa-meta {
+      font-size: 9px;
+      letter-spacing: 1px;
+    }
+    .toa-lead-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    .toa-lead-aside {
+      border-left: none;
+      padding-left: 0;
+      border-top: 1px solid #999;
+      padding-top: 16px;
+    }
+    .toa-headline {
+      font-size: 24px;
+    }
+    .toa-deck {
+      font-size: 15px;
+    }
+    .toa-body {
+      font-size: 14px;
+      text-align: left;
+    }
+    .toa-reel-row {
+      grid-template-columns: 1fr;
+    }
+    .toa-repos-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+`;
 
 export default function TimesOfAgentic() {
   const [route, setRoute] = useState('front');
@@ -49,9 +270,10 @@ export default function TimesOfAgentic() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f1e8', fontFamily: 'Georgia, "Times New Roman", serif', color: '#1a1a1a' }}>
+    <div className="toa-page">
+      <style dangerouslySetInnerHTML={{ __html: STYLES }} />
       <Masthead route={route} setRoute={setRoute} refreshedAt={refreshedAt} onRefresh={loadAll} loading={loading} />
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px 80px' }}>
+      <div className="toa-container">
         {loading && !news && <LoadingState />}
         {!loading && route === 'front' && (
           <FrontPage
@@ -88,8 +310,8 @@ function Masthead(props) {
 
   return (
     <header style={{ borderBottom: '4px double #1a1a1a' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 24px 0' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12, color: '#666' }}>
+      <div className="toa-masthead-inner">
+        <div className="toa-meta">
           <span>Vol. MMXXVI</span>
           <span>{today}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -103,33 +325,19 @@ function Masthead(props) {
             </button>
           </span>
         </div>
-        <h1 style={{ textAlign: 'center', fontSize: 56, fontWeight: 500, letterSpacing: '0.02em', margin: '4px 0' }}>
-          The Times of Agentic
-        </h1>
-        <p style={{ textAlign: 'center', fontSize: 11, fontStyle: 'italic', color: '#555', letterSpacing: '0.2em', margin: '0 0 6px' }}>
-          "All the agentic ai news agentic correspondents see fit to file"
-        </p>
-        <p style={{ textAlign: 'center', fontSize: 10, color: '#777', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 16px' }}>
-          Editor-in-Chief - Sreedhar Vasu
-        </p>
-        <nav style={{ display: 'flex', justifyContent: 'center', gap: 32, padding: '12px 0', borderTop: '1px solid #1a1a1a', borderBottom: '1px solid #1a1a1a', flexWrap: 'wrap' }}>
+        <h1 className="toa-title">The Times of Agentic</h1>
+        <p className="toa-tagline">"All the news the agents see fit to file"</p>
+        <p className="toa-editor">Editor-in-Chief - Sreedhar Vasu</p>
+        <nav className="toa-nav">
           {nav.map(function(n) {
             return (
               <button
                 key={n.id}
                 onClick={function() { props.setRoute(n.id); }}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontFamily: 'Georgia, serif',
-                  fontSize: 14,
-                  textTransform: 'uppercase',
-                  letterSpacing: 1.5,
                   fontWeight: props.route === n.id ? 500 : 400,
                   color: props.route === n.id ? '#c0392b' : '#1a1a1a',
                   borderBottom: props.route === n.id ? '2px solid #c0392b' : '2px solid transparent',
-                  paddingBottom: 4,
                 }}
               >
                 {n.label}
@@ -138,7 +346,6 @@ function Masthead(props) {
           })}
         </nav>
       </div>
-      <style>{'@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }'}</style>
     </header>
   );
 }
@@ -148,7 +355,6 @@ function LoadingState() {
     <div style={{ padding: '80px 0', textAlign: 'center', color: '#666' }}>
       <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#c0392b', marginRight: 8, animation: 'pulse 1.5s ease-in-out infinite' }}></span>
       <span style={{ fontStyle: 'italic' }}>Newsroom filing the latest edition...</span>
-      <style>{'@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }'}</style>
     </div>
   );
 }
@@ -161,6 +367,73 @@ function SectionHeader(props) {
   );
 }
 
+function InlineVideoCard(props) {
+  const [playing, setPlaying] = useState(false);
+  const v = props.video;
+  
+  if (playing) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ aspectRatio: '16/9', background: '#000', borderRadius: 4, overflow: 'hidden', marginBottom: 8 }}>
+          <iframe
+            src={'https://www.youtube.com/embed/' + v.id + '?autoplay=1'}
+            style={{ width: '100%', height: '100%', border: 0 }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            title={v.title}
+          />
+        </div>
+        <div style={{ fontSize: 12, fontWeight: 500, lineHeight: 1.3, marginBottom: 4, color: '#1a1a1a' }}>{v.title}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 10, color: '#888' }}>
+            {props.label} - {new Date(v.published).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </span>
+          <button
+            onClick={function() { setPlaying(false); }}
+            style={{ fontSize: 10, color: '#c0392b', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif' }}
+          >
+            close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={function() { setPlaying(true); }}
+      style={{
+        background: 'none',
+        border: 'none',
+        padding: 0,
+        cursor: 'pointer',
+        textAlign: 'left',
+        fontFamily: 'Georgia, serif',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <div style={{ aspectRatio: '16/9', background: '#000', borderRadius: 4, overflow: 'hidden', marginBottom: 8, position: 'relative' }}>
+        <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)' }}>
+          <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: '50%', padding: 12, display: 'flex' }}>
+            <Play size={20} fill="#fff" color="#fff" />
+          </div>
+        </div>
+        {props.label && (
+          <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,0.75)', color: '#fff', fontSize: 10, padding: '2px 6px', borderRadius: 3, letterSpacing: 0.5, fontFamily: 'Georgia, serif' }}>
+            {props.label}
+          </div>
+        )}
+      </div>
+      <div style={{ fontSize: 12, fontWeight: 500, lineHeight: 1.3, marginBottom: 4, color: '#1a1a1a' }}>{v.title}</div>
+      <div style={{ fontSize: 10, color: '#888' }}>
+        {new Date(v.published).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+      </div>
+    </button>
+  );
+}
+
 function FrontPage(props) {
   const news = props.news;
   if (!news || !news.lead) {
@@ -168,11 +441,11 @@ function FrontPage(props) {
   }
 
   return (
-    <div style={{ paddingTop: 32, display: 'grid', gridTemplateColumns: '1fr 320px', gap: 32, alignItems: 'start' }}>
+    <div className="toa-front-grid">
       <main>
         <MainColumn {...props} />
       </main>
-      <aside style={{ position: 'sticky', top: 24, alignSelf: 'start' }}>
+      <aside className="toa-aside-sticky">
         <DellSidebar dell={props.dell} multicloud={props.multicloud} />
       </aside>
     </div>
@@ -191,20 +464,20 @@ function MainColumn(props) {
 
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24, paddingBottom: 24, borderBottom: '1px solid #999' }}>
+      <div className="toa-lead-grid">
         <article>
           <SectionHeader label="LEAD STORY - ABOVE THE FOLD" />
-          <h2 style={{ fontSize: 28, lineHeight: 1.2, margin: '0 0 8px', fontWeight: 500 }}>{lead.headline}</h2>
-          <p style={{ fontSize: 16, fontStyle: 'italic', color: '#555', margin: '0 0 12px' }}>{lead.deck}</p>
+          <h2 className="toa-headline">{lead.headline}</h2>
+          <p className="toa-deck">{lead.deck}</p>
           <div style={{ fontSize: 12, fontStyle: 'italic', color: '#666', marginBottom: 16 }}>
             By <span style={{ textDecoration: 'underline' }}>{lead.byline}</span> - Filed {lead.filed_minutes_ago} min ago
             <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#c0392b', marginLeft: 6, animation: 'pulse 1.5s ease-in-out infinite' }}></span>
           </div>
-          <p style={{ fontSize: 15, lineHeight: 1.6, textAlign: 'justify', margin: '0 0 12px' }}>{lead.lede}</p>
-          <p style={{ fontSize: 15, lineHeight: 1.6, textAlign: 'justify' }}>{lead.body}</p>
+          <p className="toa-body">{lead.lede}</p>
+          <p className="toa-body">{lead.body}</p>
         </article>
 
-        <aside style={{ borderLeft: '1px solid #999', paddingLeft: 16 }}>
+        <aside className="toa-lead-aside">
           <SectionHeader label="MODEL OF THE WEEK" />
           {model && (
             <div>
@@ -228,7 +501,7 @@ function MainColumn(props) {
 
       <div style={{ paddingTop: 24, paddingBottom: 24, borderBottom: '1px solid #999' }}>
         <SectionHeader label="THE WIRE - LATEST FILINGS" />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+        <div className="toa-wire-grid">
           {wire.map(function(s, i) {
             return (
               <article key={i} style={{ paddingBottom: 12, borderBottom: '0.5px dotted #999' }}>
@@ -260,36 +533,9 @@ function MainColumn(props) {
       {labs.length > 0 && (
         <div style={{ paddingTop: 24, paddingBottom: 24, borderBottom: '1px solid #999' }}>
           <SectionHeader label="FROM THE LABS - OFFICIAL CHANNELS" />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+          <div className="toa-labs-grid">
             {labs.map(function(v) {
-              return (
-                <button
-                  key={v.id}
-                  onClick={function() { openUrl(v.url); }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontFamily: 'Georgia, serif',
-                  }}
-                >
-                  <div style={{ aspectRatio: '16/9', background: '#000', borderRadius: 4, overflow: 'hidden', marginBottom: 8, position: 'relative' }}>
-                    <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', opacity: 0.7 }}>
-                      <Play size={24} fill="#fff" color="#fff" />
-                    </div>
-                    <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,0.75)', color: '#fff', fontSize: 10, padding: '2px 6px', borderRadius: 3, letterSpacing: 0.5, fontFamily: 'Georgia, serif' }}>
-                      {v.lab}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 12, fontWeight: 500, lineHeight: 1.3, marginBottom: 4, color: '#1a1a1a' }}>{v.title}</div>
-                  <div style={{ fontSize: 10, color: '#888' }}>
-                    {new Date(v.published).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </div>
-                </button>
-              );
+              return <InlineVideoCard key={v.id} video={v} label={v.lab} />;
             })}
           </div>
         </div>
@@ -298,7 +544,7 @@ function MainColumn(props) {
       {repos.length > 0 && (
         <div style={{ paddingTop: 24, paddingBottom: 24, borderBottom: '1px solid #999' }}>
           <SectionHeader label="TRENDING REPOS - TOP 10 STARRED" />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
+          <div className="toa-repos-grid">
             {repos.map(function(r, i) {
               return (
                 <button
@@ -339,7 +585,7 @@ function MainColumn(props) {
       {videos.length > 0 && (
         <div style={{ paddingTop: 24 }}>
           <SectionHeader label="FROM THE REEL - LATEST VIDEO" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 20 }}>
+          <div className="toa-reel-row">
             <div style={{ aspectRatio: '16/9', background: '#000', borderRadius: 8, overflow: 'hidden' }}>
               <iframe
                 src={'https://www.youtube.com/embed/' + videos[0].id}
@@ -472,12 +718,12 @@ function Reel(props) {
 
       <div style={{ borderTop: '1px solid #999', paddingTop: 20 }}>
         <SectionHeader label="MORE FROM THE DESK" />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+        <div className="toa-labs-grid">
           {videos.map(function(v, i) {
             return (
               <button
                 key={v.id}
-                onClick={function() { setActiveIdx(i); }}
+                onClick={function() { setActiveIdx(i); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                 style={{
                   background: i === activeIdx ? '#ebe5d4' : 'none',
                   border: i === activeIdx ? '1px solid #c0392b' : '0.5px solid #ccc',
@@ -490,8 +736,10 @@ function Reel(props) {
               >
                 <div style={{ aspectRatio: '16/9', background: '#000', borderRadius: 4, overflow: 'hidden', marginBottom: 8, position: 'relative' }}>
                   <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', opacity: 0.7 }}>
-                    <Play size={28} fill="#fff" color="#fff" />
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: '50%', padding: 10, display: 'flex' }}>
+                      <Play size={20} fill="#fff" color="#fff" />
+                    </div>
                   </div>
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3, marginBottom: 4 }}>{v.title}</div>
