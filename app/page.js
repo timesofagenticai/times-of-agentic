@@ -107,7 +107,7 @@ function Masthead(props) {
           The Times of Agentic
         </h1>
         <p style={{ textAlign: 'center', fontSize: 11, fontStyle: 'italic', color: '#555', letterSpacing: '0.2em', margin: '0 0 6px' }}>
-          "All the news the agents see fit to file"
+          "All the agentic ai news agentic correspondents see fit to file"
         </p>
         <p style={{ textAlign: 'center', fontSize: 10, color: '#777', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 16px' }}>
           Editor-in-Chief - Sreedhar Vasu
