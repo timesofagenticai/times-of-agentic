@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, Play, Eye, ExternalLink, RefreshCw } from 'lucide-react';
+import { TrendingUp, TrendingDown, Play, Star, Code2, Video, RefreshCw, ExternalLink } from 'lucide-react';
 
 export default function TimesOfAgentic() {
   const [route, setRoute] = useState('front');
   const [news, setNews] = useState(null);
   const [videos, setVideos] = useState([]);
+  const [labs, setLabs] = useState([]);
+  const [repos, setRepos] = useState([]);
+  const [brief, setBrief] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshedAt, setRefreshedAt] = useState(null);
 
@@ -17,14 +20,23 @@ export default function TimesOfAgentic() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [newsRes, videosRes] = await Promise.all([
+      const [newsRes, videosRes, labsRes, reposRes, briefRes] = await Promise.all([
         fetch('/api/news'),
         fetch('/api/youtube'),
+        fetch('/api/labs'),
+        fetch('/api/repos'),
+        fetch('/api/brief'),
       ]);
       const newsData = await newsRes.json();
       const videosData = await videosRes.json();
+      const labsData = await labsRes.json();
+      const reposData = await reposRes.json();
+      const briefData = await briefRes.json();
       setNews(newsData);
       setVideos(videosData.videos || []);
+      setLabs(labsData.videos || []);
+      setRepos(reposData.repos || []);
+      setBrief(briefData);
       setRefreshedAt(new Date());
     } catch (err) {
       console.error('Load failed', err);
@@ -37,7 +49,7 @@ export default function TimesOfAgentic() {
       <Masthead route={route} setRoute={setRoute} refreshedAt={refreshedAt} onRefresh={loadAll} loading={loading} />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px 80px' }}>
         {loading && !news && <LoadingState />}
-        {!loading && route === 'front' && <FrontPage news={news} videos={videos} setRoute={setRoute} />}
+        {!loading && route === 'front' && <FrontPage news={news} videos={videos} labs={labs} repos={repos} brief={brief} setRoute={setRoute} />}
         {!loading && route === 'reel' && <Reel videos={videos} />}
         {!loading && route === 'trends' && <Trends trends={news?.trends} />}
         {!loading && route === 'model' && <ModelOfWeek model={news?.model_of_week} />}
@@ -116,7 +128,15 @@ function LoadingState() {
   );
 }
 
-function FrontPage({ news, videos, setRoute }) {
+function SectionHeader({ label }) {
+  return (
+    <div style={{ fontSize: 11, letterSpacing: 1.5, color: '#c0392b', fontWeight: 500, marginBottom: 16 }}>
+      ▌ {label}
+    </div>
+  );
+}
+
+function FrontPage({ news, videos, labs, repos, brief, setRoute }) {
   if (!news?.lead) {
     return <div style={{ padding: '40px 0', textAlign: 'center', color: '#888' }}>No edition available. Try refreshing.</div>;
   }
@@ -127,11 +147,10 @@ function FrontPage({ news, videos, setRoute }) {
 
   return (
     <div style={{ paddingTop: 32 }}>
+      {/* LEAD STORY + MODEL OF THE WEEK */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 32, paddingBottom: 24, borderBottom: '1px solid #999' }}>
         <article>
-          <div style={{ fontSize: 11, letterSpacing: 1.5, color: '#c0392b', fontWeight: 500, marginBottom: 8 }}>
-            ▌ LEAD STORY · ABOVE THE FOLD
-          </div>
+          <SectionHeader label="LEAD STORY · ABOVE THE FOLD" />
           <h2 style={{ fontSize: 32, lineHeight: 1.2, margin: '0 0 8px', fontWeight: 500 }}>{lead.headline}</h2>
           <p style={{ fontSize: 18, fontStyle: 'italic', color: '#555', margin: '0 0 12px' }}>{lead.deck}</p>
           <div style={{ fontSize: 12, fontStyle: 'italic', color: '#666', marginBottom: 16 }}>
@@ -140,18 +159,10 @@ function FrontPage({ news, videos, setRoute }) {
           </div>
           <p style={{ fontSize: 16, lineHeight: 1.6, textAlign: 'justify', margin: '0 0 12px' }}>{lead.lede}</p>
           <p style={{ fontSize: 16, lineHeight: 1.6, textAlign: 'justify', columnCount: 2, columnGap: 20, columnRule: '0.5px solid #ccc' }}>{lead.body}</p>
-          {videos[0] && (
-            <button
-              onClick={() => setRoute('reel')}
-              style={{ marginTop: 20, fontSize: 14, fontStyle: 'italic', color: '#c0392b', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif' }}
-            >
-              → See the latest video coverage in The Reel
-            </button>
-          )}
         </article>
 
         <aside style={{ borderLeft: '1px solid #999', paddingLeft: 20 }}>
-          <div style={{ fontSize: 11, letterSpacing: 1.5, color: '#c0392b', fontWeight: 500, marginBottom: 8 }}>▌ MODEL OF THE WEEK</div>
+          <SectionHeader label="MODEL OF THE WEEK" />
           {model && (
             <>
               <h3 style={{ fontSize: 22, fontWeight: 500, margin: '0 0 4px' }}>{model.name}</h3>
@@ -172,8 +183,9 @@ function FrontPage({ news, videos, setRoute }) {
         </aside>
       </div>
 
-      <div style={{ paddingTop: 24 }}>
-        <div style={{ fontSize: 11, letterSpacing: 1.5, color: '#c0392b', fontWeight: 500, marginBottom: 16 }}>▌ THE WIRE · LATEST FILINGS</div>
+      {/* THE WIRE */}
+      <div style={{ paddingTop: 24, paddingBottom: 24, borderBottom: '1px solid #999' }}>
+        <SectionHeader label="THE WIRE · LATEST FILINGS" />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
           {wire.map((s, i) => (
             <article key={i} style={{ paddingBottom: 12, borderBottom: '0.5px dotted #999' }}>
@@ -186,9 +198,94 @@ function FrontPage({ news, videos, setRoute }) {
         </div>
       </div>
 
+      {/* TOP TREND BRIEF */}
+      {brief?.brief && (
+        <div style={{ paddingTop: 24, paddingBottom: 24, borderBottom: '1px solid #999' }}>
+          <SectionHeader label="TOP TREND BRIEF · 10 LINES" />
+          <div style={{ background: '#ebe5d4', padding: '24px 28px', borderLeft: '4px solid #c0392b' }}>
+            <h3 style={{ fontSize: 22, fontWeight: 500, margin: '0 0 4px', lineHeight: 1.3 }}>{brief.headline}</h3>
+            <div style={{ fontSize: 12, fontStyle: 'italic', color: '#666', marginBottom: 16 }}>
+              By <span style={{ textDecoration: 'underline' }}>{brief.byline}</span> · Lead Columnist
+            </div>
+            <div style={{ fontSize: 15, lineHeight: 1.8, color: '#1a1a1a', whiteSpace: 'pre-line' }}>
+              {brief.brief}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FROM THE LABS */}
+      {labs.length > 0 && (
+        <div style={{ paddingTop: 24, paddingBottom: 24, borderBottom: '1px solid #999' }}>
+          <SectionHeader label="FROM THE LABS · OFFICIAL CHANNELS" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+            {labs.map((v) => (
+              
+                key={v.id}
+                href={v.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+              >
+                <div style={{ aspectRatio: '16/9', background: '#000', borderRadius: 4, overflow: 'hidden', marginBottom: 8, position: 'relative' }}>
+                  <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', opacity: 0.7 }}>
+                    <Play size={28} fill="#fff" color="#fff" />
+                  </div>
+                  <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,0.75)', color: '#fff', fontSize: 10, padding: '2px 6px', borderRadius: 3, letterSpacing: 0.5, fontFamily: 'Georgia, serif' }}>
+                    {v.lab}
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3, marginBottom: 4 }}>{v.title}</div>
+                <div style={{ fontSize: 11, color: '#888' }}>
+                  {new Date(v.published).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TRENDING REPOS */}
+      {repos.length > 0 && (
+        <div style={{ paddingTop: 24, paddingBottom: 24, borderBottom: '1px solid #999' }}>
+          <SectionHeader label="TRENDING REPOS · TOP 10 STARRED" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 12 }}>
+            {repos.map((r, i) => (
+              
+                key={r.name}
+                href={r.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: 'none', color: 'inherit', display: 'block', background: '#fff', padding: '12px 14px', border: '0.5px solid #ccc', borderRadius: 4, transition: 'border-color 0.2s' }}
+                onMouseOver={(e) => e.currentTarget.style.borderColor = '#c0392b'}
+                onMouseOut={(e) => e.currentTarget.style.borderColor = '#ccc'}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: '#1a1a1a' }}>
+                    <span style={{ color: '#888' }}>#{i + 1}</span> {r.name}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#c0392b', fontWeight: 500, whiteSpace: 'nowrap', marginLeft: 8 }}>
+                    <Star size={12} fill="#c0392b" /> {r.stars_display}
+                  </div>
+                </div>
+                <p style={{ fontSize: 12, color: '#555', lineHeight: 1.4, margin: '0 0 6px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {r.description || 'No description.'}
+                </p>
+                <div style={{ fontSize: 11, color: '#888' }}>
+                  <Code2 size={10} style={{ display: 'inline', marginRight: 4, verticalAlign: -1 }} />
+                  {r.language}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* FROM THE REEL */}
       {videos.length > 0 && (
-        <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid #999' }}>
-          <div style={{ fontSize: 11, letterSpacing: 1.5, color: '#c0392b', fontWeight: 500, marginBottom: 16 }}>▌ FROM THE REEL · LATEST VIDEO</div>
+        <div style={{ paddingTop: 24 }}>
+          <SectionHeader label="FROM THE REEL · LATEST VIDEO" />
           <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 24 }}>
             <div style={{ aspectRatio: '16/9', background: '#000', borderRadius: 8, overflow: 'hidden' }}>
               <iframe
@@ -256,7 +353,7 @@ function Reel({ videos }) {
       </div>
 
       <div style={{ borderTop: '1px solid #999', paddingTop: 20 }}>
-        <div style={{ fontSize: 11, letterSpacing: 1.5, color: '#c0392b', fontWeight: 500, marginBottom: 16 }}>▌ MORE FROM THE DESK</div>
+        <SectionHeader label="MORE FROM THE DESK" />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
           {videos.map((v, i) => (
             <button
@@ -343,7 +440,7 @@ function ModelOfWeek({ model }) {
 
   return (
     <div style={{ paddingTop: 32, maxWidth: 760, margin: '0 auto' }}>
-      <div style={{ fontSize: 11, letterSpacing: 1.5, color: '#c0392b', fontWeight: 500, marginBottom: 8 }}>▌ MODEL OF THE WEEK</div>
+      <SectionHeader label="MODEL OF THE WEEK" />
       <h2 style={{ fontSize: 40, fontWeight: 500, margin: '0 0 8px' }}>{model.name}</h2>
       <div style={{ fontSize: 14, fontStyle: 'italic', color: '#666', marginBottom: 24 }}>Field report by Agent Ada</div>
 
@@ -376,6 +473,9 @@ function Footer() {
     <footer style={{ marginTop: 48, padding: '24px 0', borderTop: '1px solid #999', background: '#ebe5d4' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', textAlign: 'center', fontSize: 12, color: '#666' }}>
         <div style={{ marginBottom: 8, fontStyle: 'italic' }}>The Times of Agentic · Filed by autonomous agents</div>
+        <div style={{ marginBottom: 8 }}>
+          Editor-in-Chief: <a href="https://www.linkedin.com/in/YOUR-LINKEDIN-HANDLE-HERE" target="_blank" rel="noopener noreferrer" style={{ color: '#c0392b', textDecoration: 'none' }}>Sreedhar Vasu</a>
+        </div>
         <div>© MMXXVI · A publication for the agentic age</div>
       </div>
     </footer>
