@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, Play, Star, Code2, RefreshCw } from 'lucide-react';
+import { TrendingUp, TrendingDown, Play, Star, Code2, RefreshCw, Cloud, Server } from 'lucide-react';
+
+function openUrl(url) {
+  if (typeof window !== 'undefined') {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+}
 
 export default function TimesOfAgentic() {
   const [route, setRoute] = useState('front');
@@ -10,49 +16,58 @@ export default function TimesOfAgentic() {
   const [labs, setLabs] = useState([]);
   const [repos, setRepos] = useState([]);
   const [brief, setBrief] = useState(null);
+  const [dell, setDell] = useState([]);
+  const [multicloud, setMulticloud] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshedAt, setRefreshedAt] = useState(null);
 
-  useEffect(() => {
+  useEffect(function() {
     loadAll();
   }, []);
 
-  const loadAll = async () => {
+  function loadAll() {
     setLoading(true);
-    try {
-      const [newsRes, videosRes, labsRes, reposRes, briefRes] = await Promise.all([
-        fetch('/api/news'),
-        fetch('/api/youtube'),
-        fetch('/api/labs'),
-        fetch('/api/repos'),
-        fetch('/api/brief'),
-      ]);
-      const newsData = await newsRes.json();
-      const videosData = await videosRes.json();
-      const labsData = await labsRes.json();
-      const reposData = await reposRes.json();
-      const briefData = await briefRes.json();
-      setNews(newsData);
-      setVideos(videosData.videos || []);
-      setLabs(labsData.videos || []);
-      setRepos(reposData.repos || []);
-      setBrief(briefData);
+    Promise.all([
+      fetch('/api/news').then(function(r) { return r.json(); }).catch(function() { return null; }),
+      fetch('/api/youtube').then(function(r) { return r.json(); }).catch(function() { return { videos: [] }; }),
+      fetch('/api/labs').then(function(r) { return r.json(); }).catch(function() { return { videos: [] }; }),
+      fetch('/api/repos').then(function(r) { return r.json(); }).catch(function() { return { repos: [] }; }),
+      fetch('/api/brief').then(function(r) { return r.json(); }).catch(function() { return null; }),
+      fetch('/api/dell').then(function(r) { return r.json(); }).catch(function() { return { items: [] }; }),
+      fetch('/api/multicloud').then(function(r) { return r.json(); }).catch(function() { return null; }),
+    ]).then(function(results) {
+      setNews(results[0]);
+      setVideos((results[1] && results[1].videos) || []);
+      setLabs((results[2] && results[2].videos) || []);
+      setRepos((results[3] && results[3].repos) || []);
+      setBrief(results[4]);
+      setDell((results[5] && results[5].items) || []);
+      setMulticloud(results[6]);
       setRefreshedAt(new Date());
-    } catch (err) {
-      console.error('Load failed', err);
-    }
-    setLoading(false);
-  };
+      setLoading(false);
+    });
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#f5f1e8', fontFamily: 'Georgia, "Times New Roman", serif', color: '#1a1a1a' }}>
       <Masthead route={route} setRoute={setRoute} refreshedAt={refreshedAt} onRefresh={loadAll} loading={loading} />
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px 80px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px 80px' }}>
         {loading && !news && <LoadingState />}
-        {!loading && route === 'front' && <FrontPage news={news} videos={videos} labs={labs} repos={repos} brief={brief} setRoute={setRoute} />}
+        {!loading && route === 'front' && (
+          <FrontPage
+            news={news}
+            videos={videos}
+            labs={labs}
+            repos={repos}
+            brief={brief}
+            dell={dell}
+            multicloud={multicloud}
+            setRoute={setRoute}
+          />
+        )}
         {!loading && route === 'reel' && <Reel videos={videos} />}
-        {!loading && route === 'trends' && <Trends trends={news?.trends} />}
-        {!loading && route === 'model' && <ModelOfWeek model={news?.model_of_week} />}
+        {!loading && route === 'trends' && <Trends trends={news && news.trends} />}
+        {!loading && route === 'model' && <ModelOfWeek model={news && news.model_of_week} />}
       </div>
       <Footer />
     </div>
@@ -60,12 +75,6 @@ export default function TimesOfAgentic() {
 }
 
 function Masthead(props) {
-  const route = props.route;
-  const setRoute = props.setRoute;
-  const refreshedAt = props.refreshedAt;
-  const onRefresh = props.onRefresh;
-  const loading = props.loading;
-
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const nav = [
     { id: 'front', label: 'Front Page' },
@@ -73,20 +82,24 @@ function Masthead(props) {
     { id: 'trends', label: 'Trends' },
     { id: 'model', label: 'Model of the Week' },
   ];
-  const refreshedText = refreshedAt
-    ? 'Last filed ' + refreshedAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+  const refreshedText = props.refreshedAt
+    ? 'Last filed ' + props.refreshedAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
     : 'Filing...';
 
   return (
     <header style={{ borderBottom: '4px double #1a1a1a' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 24px 0' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 24px 0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12, color: '#666' }}>
           <span>Vol. MMXXVI</span>
           <span>{today}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {refreshedText}
-            <button onClick={onRefresh} disabled={loading} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', padding: 0, display: 'flex' }}>
-              <RefreshCw size={11} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+            <button
+              onClick={props.onRefresh}
+              disabled={props.loading}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', padding: 0, display: 'flex' }}
+            >
+              <RefreshCw size={11} style={{ animation: props.loading ? 'spin 1s linear infinite' : 'none' }} />
             </button>
           </span>
         </div>
@@ -104,14 +117,18 @@ function Masthead(props) {
             return (
               <button
                 key={n.id}
-                onClick={function() { setRoute(n.id); }}
+                onClick={function() { props.setRoute(n.id); }}
                 style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
                   fontFamily: 'Georgia, serif',
-                  fontSize: 14, textTransform: 'uppercase', letterSpacing: 1.5,
-                  fontWeight: route === n.id ? 500 : 400,
-                  color: route === n.id ? '#c0392b' : '#1a1a1a',
-                  borderBottom: route === n.id ? '2px solid #c0392b' : '2px solid transparent',
+                  fontSize: 14,
+                  textTransform: 'uppercase',
+                  letterSpacing: 1.5,
+                  fontWeight: props.route === n.id ? 500 : 400,
+                  color: props.route === n.id ? '#c0392b' : '#1a1a1a',
+                  borderBottom: props.route === n.id ? '2px solid #c0392b' : '2px solid transparent',
                   paddingBottom: 4,
                 }}
               >
@@ -146,52 +163,63 @@ function SectionHeader(props) {
 
 function FrontPage(props) {
   const news = props.news;
-  const videos = props.videos;
-  const labs = props.labs;
-  const repos = props.repos;
-  const brief = props.brief;
-  const setRoute = props.setRoute;
-
   if (!news || !news.lead) {
     return <div style={{ padding: '40px 0', textAlign: 'center', color: '#888' }}>No edition available. Try refreshing.</div>;
   }
 
+  return (
+    <div style={{ paddingTop: 32, display: 'grid', gridTemplateColumns: '1fr 320px', gap: 32, alignItems: 'start' }}>
+      <main>
+        <MainColumn {...props} />
+      </main>
+      <aside style={{ position: 'sticky', top: 24, alignSelf: 'start' }}>
+        <DellSidebar dell={props.dell} multicloud={props.multicloud} />
+      </aside>
+    </div>
+  );
+}
+
+function MainColumn(props) {
+  const news = props.news;
   const lead = news.lead;
   const wire = news.wire || [];
   const model = news.model_of_week;
+  const brief = props.brief;
+  const labs = props.labs || [];
+  const repos = props.repos || [];
+  const videos = props.videos || [];
 
   return (
-    <div style={{ paddingTop: 32 }}>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 32, paddingBottom: 24, borderBottom: '1px solid #999' }}>
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24, paddingBottom: 24, borderBottom: '1px solid #999' }}>
         <article>
           <SectionHeader label="LEAD STORY - ABOVE THE FOLD" />
-          <h2 style={{ fontSize: 32, lineHeight: 1.2, margin: '0 0 8px', fontWeight: 500 }}>{lead.headline}</h2>
-          <p style={{ fontSize: 18, fontStyle: 'italic', color: '#555', margin: '0 0 12px' }}>{lead.deck}</p>
+          <h2 style={{ fontSize: 28, lineHeight: 1.2, margin: '0 0 8px', fontWeight: 500 }}>{lead.headline}</h2>
+          <p style={{ fontSize: 16, fontStyle: 'italic', color: '#555', margin: '0 0 12px' }}>{lead.deck}</p>
           <div style={{ fontSize: 12, fontStyle: 'italic', color: '#666', marginBottom: 16 }}>
             By <span style={{ textDecoration: 'underline' }}>{lead.byline}</span> - Filed {lead.filed_minutes_ago} min ago
             <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#c0392b', marginLeft: 6, animation: 'pulse 1.5s ease-in-out infinite' }}></span>
           </div>
-          <p style={{ fontSize: 16, lineHeight: 1.6, textAlign: 'justify', margin: '0 0 12px' }}>{lead.lede}</p>
-          <p style={{ fontSize: 16, lineHeight: 1.6, textAlign: 'justify', columnCount: 2, columnGap: 20, columnRule: '0.5px solid #ccc' }}>{lead.body}</p>
+          <p style={{ fontSize: 15, lineHeight: 1.6, textAlign: 'justify', margin: '0 0 12px' }}>{lead.lede}</p>
+          <p style={{ fontSize: 15, lineHeight: 1.6, textAlign: 'justify' }}>{lead.body}</p>
         </article>
 
-        <aside style={{ borderLeft: '1px solid #999', paddingLeft: 20 }}>
+        <aside style={{ borderLeft: '1px solid #999', paddingLeft: 16 }}>
           <SectionHeader label="MODEL OF THE WEEK" />
           {model && (
             <div>
-              <h3 style={{ fontSize: 22, fontWeight: 500, margin: '0 0 4px' }}>{model.name}</h3>
-              <div style={{ fontSize: 12, fontStyle: 'italic', color: '#666', marginBottom: 12 }}>Field report by Agent Ada</div>
-              <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
+              <h3 style={{ fontSize: 18, fontWeight: 500, margin: '0 0 4px' }}>{model.name}</h3>
+              <div style={{ fontSize: 11, fontStyle: 'italic', color: '#666', marginBottom: 10 }}>Field report by Agent Ada</div>
+              <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
                 <tbody>
-                  <tr style={{ borderBottom: '0.5px dotted #999' }}><td style={{ padding: '6px 0' }}>Tool-calling acc.</td><td style={{ textAlign: 'right', fontWeight: 500 }}>{model.tool_calling}</td></tr>
-                  <tr style={{ borderBottom: '0.5px dotted #999' }}><td style={{ padding: '6px 0' }}>Planning depth</td><td style={{ textAlign: 'right', fontWeight: 500 }}>{model.planning_depth} / 10</td></tr>
-                  <tr style={{ borderBottom: '0.5px dotted #999' }}><td style={{ padding: '6px 0' }}>ReAct stability</td><td style={{ textAlign: 'right', fontWeight: 500 }}>{model.react_stability}</td></tr>
-                  <tr><td style={{ padding: '6px 0' }}>Cost / task</td><td style={{ textAlign: 'right', fontWeight: 500 }}>{model.cost_per_task}</td></tr>
+                  <tr style={{ borderBottom: '0.5px dotted #999' }}><td style={{ padding: '5px 0' }}>Tool-calling</td><td style={{ textAlign: 'right', fontWeight: 500 }}>{model.tool_calling}</td></tr>
+                  <tr style={{ borderBottom: '0.5px dotted #999' }}><td style={{ padding: '5px 0' }}>Planning</td><td style={{ textAlign: 'right', fontWeight: 500 }}>{model.planning_depth} / 10</td></tr>
+                  <tr style={{ borderBottom: '0.5px dotted #999' }}><td style={{ padding: '5px 0' }}>ReAct</td><td style={{ textAlign: 'right', fontWeight: 500 }}>{model.react_stability}</td></tr>
+                  <tr><td style={{ padding: '5px 0' }}>Cost / task</td><td style={{ textAlign: 'right', fontWeight: 500 }}>{model.cost_per_task}</td></tr>
                 </tbody>
               </table>
-              <div style={{ marginTop: 12, padding: 10, background: '#ebe5d4', borderLeft: '2px solid #c0392b', fontSize: 12, fontStyle: 'italic', lineHeight: 1.5 }}>
-                "{model.quote}" - Ada
+              <div style={{ marginTop: 10, padding: 10, background: '#ebe5d4', borderLeft: '2px solid #c0392b', fontSize: 11, fontStyle: 'italic', lineHeight: 1.5 }}>
+                "{model.quote}"
               </div>
             </div>
           )}
@@ -200,13 +228,13 @@ function FrontPage(props) {
 
       <div style={{ paddingTop: 24, paddingBottom: 24, borderBottom: '1px solid #999' }}>
         <SectionHeader label="THE WIRE - LATEST FILINGS" />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
           {wire.map(function(s, i) {
             return (
               <article key={i} style={{ paddingBottom: 12, borderBottom: '0.5px dotted #999' }}>
                 <div style={{ fontSize: 11, color: '#c0392b', marginBottom: 4 }}>{'\u25CF '}{s.minutes_ago} MIN AGO</div>
-                <h4 style={{ fontSize: 16, lineHeight: 1.3, margin: '0 0 6px', fontWeight: 500 }}>{s.headline}</h4>
-                <p style={{ fontSize: 14, color: '#555', lineHeight: 1.5, margin: 0 }}>{s.summary}</p>
+                <h4 style={{ fontSize: 15, lineHeight: 1.3, margin: '0 0 6px', fontWeight: 500 }}>{s.headline}</h4>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.5, margin: 0 }}>{s.summary}</p>
                 <div style={{ fontSize: 11, fontStyle: 'italic', marginTop: 6, color: '#888' }}>- {s.agent}</div>
               </article>
             );
@@ -222,85 +250,96 @@ function FrontPage(props) {
             <div style={{ fontSize: 12, fontStyle: 'italic', color: '#666', marginBottom: 16 }}>
               By <span style={{ textDecoration: 'underline' }}>{brief.byline}</span> - Lead Columnist
             </div>
-            <div style={{ fontSize: 15, lineHeight: 1.8, color: '#1a1a1a', whiteSpace: 'pre-line' }}>
+            <div style={{ fontSize: 14, lineHeight: 1.8, color: '#1a1a1a', whiteSpace: 'pre-line' }}>
               {brief.brief}
             </div>
           </div>
         </div>
       )}
 
-      {labs && labs.length > 0 && (
+      {labs.length > 0 && (
         <div style={{ paddingTop: 24, paddingBottom: 24, borderBottom: '1px solid #999' }}>
           <SectionHeader label="FROM THE LABS - OFFICIAL CHANNELS" />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
             {labs.map(function(v) {
               return (
-                
+                <button
                   key={v.id}
-                  href={v.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+                  onClick={function() { openUrl(v.url); }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontFamily: 'Georgia, serif',
+                  }}
                 >
                   <div style={{ aspectRatio: '16/9', background: '#000', borderRadius: 4, overflow: 'hidden', marginBottom: 8, position: 'relative' }}>
                     <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', opacity: 0.7 }}>
-                      <Play size={28} fill="#fff" color="#fff" />
+                      <Play size={24} fill="#fff" color="#fff" />
                     </div>
                     <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,0.75)', color: '#fff', fontSize: 10, padding: '2px 6px', borderRadius: 3, letterSpacing: 0.5, fontFamily: 'Georgia, serif' }}>
                       {v.lab}
                     </div>
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3, marginBottom: 4 }}>{v.title}</div>
-                  <div style={{ fontSize: 11, color: '#888' }}>
+                  <div style={{ fontSize: 12, fontWeight: 500, lineHeight: 1.3, marginBottom: 4, color: '#1a1a1a' }}>{v.title}</div>
+                  <div style={{ fontSize: 10, color: '#888' }}>
                     {new Date(v.published).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </div>
-                </a>
+                </button>
               );
             })}
           </div>
         </div>
       )}
 
-      {repos && repos.length > 0 && (
+      {repos.length > 0 && (
         <div style={{ paddingTop: 24, paddingBottom: 24, borderBottom: '1px solid #999' }}>
           <SectionHeader label="TRENDING REPOS - TOP 10 STARRED" />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
             {repos.map(function(r, i) {
               return (
-                
+                <button
                   key={r.name}
-                  href={r.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ textDecoration: 'none', color: 'inherit', display: 'block', background: '#fff', padding: '12px 14px', border: '0.5px solid #ccc', borderRadius: 4 }}
+                  onClick={function() { openUrl(r.url); }}
+                  style={{
+                    background: '#fff',
+                    padding: '10px 12px',
+                    border: '0.5px solid #ccc',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontFamily: 'Georgia, serif',
+                  }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: '#1a1a1a' }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>
                       <span style={{ color: '#888' }}>#{i + 1}</span> {r.name}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#c0392b', fontWeight: 500, whiteSpace: 'nowrap', marginLeft: 8 }}>
-                      <Star size={12} fill="#c0392b" /> {r.stars_display}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#c0392b', fontWeight: 500, whiteSpace: 'nowrap', marginLeft: 8 }}>
+                      <Star size={11} fill="#c0392b" /> {r.stars_display}
                     </div>
                   </div>
-                  <p style={{ fontSize: 12, color: '#555', lineHeight: 1.4, margin: '0 0 6px' }}>
+                  <p style={{ fontSize: 11, color: '#555', lineHeight: 1.4, margin: '0 0 6px' }}>
                     {r.description || 'No description.'}
                   </p>
-                  <div style={{ fontSize: 11, color: '#888' }}>
+                  <div style={{ fontSize: 10, color: '#888' }}>
                     <Code2 size={10} style={{ display: 'inline', marginRight: 4, verticalAlign: -1 }} />
                     {r.language}
                   </div>
-                </a>
+                </button>
               );
             })}
           </div>
         </div>
       )}
 
-      {videos && videos.length > 0 && (
+      {videos.length > 0 && (
         <div style={{ paddingTop: 24 }}>
           <SectionHeader label="FROM THE REEL - LATEST VIDEO" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 20 }}>
             <div style={{ aspectRatio: '16/9', background: '#000', borderRadius: 8, overflow: 'hidden' }}>
               <iframe
                 src={'https://www.youtube.com/embed/' + videos[0].id}
@@ -311,14 +350,78 @@ function FrontPage(props) {
               />
             </div>
             <div>
-              <h3 style={{ fontSize: 20, fontWeight: 500, margin: '0 0 8px', lineHeight: 1.3 }}>{videos[0].title}</h3>
-              <p style={{ fontSize: 14, color: '#555', lineHeight: 1.5, margin: '0 0 12px' }}>{videos[0].description}</p>
+              <h3 style={{ fontSize: 18, fontWeight: 500, margin: '0 0 8px', lineHeight: 1.3 }}>{videos[0].title}</h3>
+              <p style={{ fontSize: 13, color: '#555', lineHeight: 1.5, margin: '0 0 12px' }}>{videos[0].description}</p>
               <button
-                onClick={function() { setRoute('reel'); }}
-                style={{ fontSize: 13, color: '#c0392b', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}
+                onClick={function() { props.setRoute('reel'); }}
+                style={{ fontSize: 13, color: '#c0392b', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontStyle: 'italic', padding: 0 }}
               >
                 See all {videos.length} videos in The Reel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DellSidebar(props) {
+  return (
+    <div style={{ background: '#1a1a1a', color: '#f5f1e8', padding: 18, borderRadius: 4 }}>
+      <div style={{ fontSize: 10, letterSpacing: 1.5, color: '#c0392b', fontWeight: 500, marginBottom: 4, textTransform: 'uppercase' }}>
+        {'\u258C '}DELL DESK
+      </div>
+      <div style={{ fontSize: 11, color: '#888', fontStyle: 'italic', marginBottom: 18, paddingBottom: 10, borderBottom: '0.5px solid #444' }}>
+        Infrastructure correspondent
+      </div>
+
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, fontSize: 11, letterSpacing: 1, color: '#f5f1e8', fontWeight: 500 }}>
+          <Server size={12} /> ON THE WIRE
+        </div>
+        {props.dell && props.dell.length > 0 ? (
+          <div>
+            {props.dell.slice(0, 5).map(function(item, i) {
+              return (
+                <button
+                  key={i}
+                  onClick={function() { openUrl(item.link); }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: '8px 0',
+                    borderBottom: i < props.dell.length - 1 ? '0.5px dotted #444' : 'none',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    width: '100%',
+                    color: '#f5f1e8',
+                    fontFamily: 'Georgia, serif',
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 500, lineHeight: 1.3, marginBottom: 3 }}>{item.title}</div>
+                  <div style={{ fontSize: 10, color: '#888' }}>
+                    {item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{ fontSize: 11, color: '#888', fontStyle: 'italic' }}>Wire is quiet.</div>
+        )}
+      </div>
+
+      {props.multicloud && props.multicloud.brief && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, fontSize: 11, letterSpacing: 1, color: '#f5f1e8', fontWeight: 500 }}>
+            <Cloud size={12} /> MULTICLOUD BRIEF
+          </div>
+          <div style={{ background: '#2a2a2a', padding: '14px 16px', borderLeft: '2px solid #c0392b' }}>
+            <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6, lineHeight: 1.3 }}>{props.multicloud.headline}</div>
+            <div style={{ fontSize: 10, color: '#888', fontStyle: 'italic', marginBottom: 10 }}>By {props.multicloud.byline}</div>
+            <div style={{ fontSize: 12, lineHeight: 1.7, whiteSpace: 'pre-line', color: '#ddd' }}>
+              {props.multicloud.brief}
             </div>
           </div>
         </div>
@@ -496,12 +599,22 @@ function ModelOfWeek(props) {
 }
 
 function Footer() {
+  function openLinkedIn() {
+    openUrl('https://www.linkedin.com/in/sreedhar-v-24831453/');
+  }
+
   return (
     <footer style={{ marginTop: 48, padding: '24px 0', borderTop: '1px solid #999', background: '#ebe5d4' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', textAlign: 'center', fontSize: 12, color: '#666' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', textAlign: 'center', fontSize: 12, color: '#666' }}>
         <div style={{ marginBottom: 8, fontStyle: 'italic' }}>The Times of Agentic - Filed by autonomous agents</div>
         <div style={{ marginBottom: 8 }}>
-          Editor-in-Chief: <a href="https://www.linkedin.com/in/YOUR-LINKEDIN-HANDLE-HERE" target="_blank" rel="noopener noreferrer" style={{ color: '#c0392b', textDecoration: 'none' }}>Sreedhar Vasu</a>
+          Editor-in-Chief:{' '}
+          <button
+            onClick={openLinkedIn}
+            style={{ color: '#c0392b', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontSize: 12, padding: 0 }}
+          >
+            Sreedhar Vasu
+          </button>
         </div>
         <div>(c) MMXXVI - A publication for the agentic age</div>
       </div>
