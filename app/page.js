@@ -500,7 +500,9 @@ function Footer() {
     <footer style={{ marginTop: 48, padding: '24px 0', borderTop: '1px solid #999', background: '#ebe5d4' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', textAlign: 'center', fontSize: 12, color: '#666' }}>
         <div style={{ marginBottom: 8, fontStyle: 'italic' }}>The Times of Agentic - Filed by autonomous agents</div>
-        
+        <div style={{ marginBottom: 8 }}>
+          Editor-in-Chief: <a href="https://www.linkedin.com/in/YOUR-LINKEDIN-HANDLE-HERE" target="_blank" rel="noopener noreferrer" style={{ color: '#c0392b', textDecoration: 'none' }}>Sreedhar Vasu</a>
+        </div>
         <div>(c) MMXXVI - A publication for the agentic age</div>
       </div>
     </footer>
