@@ -6,13 +6,10 @@ export async function GET() {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const since = sevenDaysAgo.toISOString().split('T')[0];
 
-    // Broader query - searches by topic OR keywords in name/description
-    // Catches repos even if they haven't tagged themselves with topics
-    const query = encodeURIComponent(
-      '(agent OR llm OR ai OR gpt OR claude OR gemini OR mcp OR agentic) language:Python pushed:>' + since + ' stars:>500'
-    );
-    
-    const url = 'https://api.github.com/search/repositories?q=' + query + '&sort=stars&order=desc&per_page=20';
+    // Simpler query: Python repos with high stars pushed recently
+    // We'll filter for AI relevance after fetching
+    const query = 'language:Python pushed:>' + since + ' stars:>1000';
+    const url = 'https://api.github.com/search/repositories?q=' + encodeURIComponent(query) + '&sort=stars&order=desc&per_page=50';
 
     const headers = {
       'Accept': 'application/vnd.github.v3+json',
@@ -30,8 +27,9 @@ export async function GET() {
     });
 
     if (!res.ok) {
+      const errText = await res.text();
       return Response.json(
-        { error: 'GitHub API error', status: res.status, repos: [] },
+        { error: 'GitHub API error', status: res.status, detail: errText, repos: [] },
         { status: 200 }
       );
     }
@@ -40,7 +38,7 @@ export async function GET() {
     const now = Date.now();
     
     // Filter for AI/agent relevance via name + description scan
-    const aiKeywords = /\b(agent|llm|ai|gpt|claude|gemini|mcp|agentic|chatbot|copilot|rag|prompt|transformer|embedding|vector|inference|fine.?tun)/i;
+    const aiKeywords = /\b(agent|llm|ai|gpt|claude|gemini|mcp|agentic|chatbot|copilot|rag|prompt|transformer|embedding|vector|inference|fine.?tun|chat|model|neural|deep.?learn|machine.?learn|huggingface|langchain|llama|mistral|whisper|stable.?diffusion|diffusion)/i;
     
     const repos = (data.items || [])
       .filter(function(repo) {
@@ -79,7 +77,8 @@ export async function GET() {
     return Response.json({
       repos: top,
       generated_at: new Date().toISOString(),
-      query_count: data.total_count || 0,
+      total_filtered: repos.length,
+      total_fetched: (data.items || []).length,
     });
   } catch (err) {
     return Response.json(
